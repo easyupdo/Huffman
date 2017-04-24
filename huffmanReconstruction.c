@@ -33,6 +33,83 @@ typedef struct node
 	char info_huffmanCode[256]; //huffman编码
 }node;
 
+
+/*
+功能: 将char转换为int
+参数:
+	char ch[]   :字符数组地址
+返回值: 转换后的int值
+
+*/
+int charStringTransformToInt(char ch[])//
+{
+	int weight;
+	char *p;
+	int len,n,nsum = 1;
+	len = strlen(ch)-1;
+	p = ch+len;
+	weight = (*p) - 48;
+	n = len;
+//	printf("%d\n",weight);
+	while(len -- )
+	{
+		p-=1;
+		nsum = nsum*10;
+		weight = weight + ((*p) - 48)*nsum;
+		
+	}
+	return weight;
+}
+/*
+功能: 读取配置文件
+参数:
+	node*pnode:字符和权值结构数组首地址
+返回值: 无
+
+*/
+
+
+void readHuffmanConfig(node*pnode)
+{
+	FILE *stream ;
+	char arr[100];
+	char * post;
+	char ch[10];
+	char huffmanCode[256];
+	int huffmanWeight;
+	int i = 0,k = 0;
+	stream = fopen("huffman.conf","r");
+	while(!feof(stream))
+	{
+		memset(arr, 0, 100);
+		memset(ch, 0, sizeof(ch));
+		fgets(arr,100,stream);
+
+		if(arr[0]=='#')
+		continue;
+		post = strchr(arr,':');
+		if (post == NULL)
+		{
+			continue;
+		}
+		strncpy(ch,arr,post - arr);
+		ch[post-arr] = '\0';
+		
+		strncpy(huffmanCode,post + 1,strlen(arr) - (post -arr) -2);  //4 - 1 -1
+		huffmanCode[strlen(arr) - (post -arr) -2] = '\0';
+		i++;
+		//strcat(&ch[0][0],"\0");//从目标字符串的\0处开始链接，如果目标 字符串结尾没有\0 链接就会出错
+		huffmanWeight = charStringTransformToInt(huffmanCode);
+		printf("字符:%s  权值:%d\n",ch,huffmanWeight);
+		pnode->info_weight = huffmanWeight;
+		pnode->info_word = ch[0];
+		pnode+=1;
+	}
+}
+
+
+
+
 /*
 功能:将用户输入的信息根据权值从小到大排序
 参数:
@@ -232,7 +309,7 @@ void huffmanDecoding(node*rootPnode,int N)
 	char ch;
 	int num;
 	int x;
-	printf("Please input huffmanCode\n");//输入huffman以解码
+	printf("Please input huffmanCode for decoding\n");
 	getchar();
 	while((ch = getchar()) != '\n')
 	{
@@ -268,13 +345,14 @@ int main(int argc,char *argv[])
 	printf("Please input the NODE num!\n");
 	scanf("%d",&N);
 	rootPnode = pnode = (node*)malloc(N*sizeof(node));
-	for(i=0;i<N;i++)
+	/*for(i=0;i<N;i++)
 	{
 		scanf("%d %c",&pnode->info_weight,&pnode->info_word);
 		memset(pnode->info_huffmanCode,0,sizeof(pnode->info_huffmanCode));
 		pnode++;
 		
-	}
+	}*/
+	readHuffmanConfig(rootPnode);
 	rootHuffmanTree = createHuffmanTree(rootPnode,N);
 	huffmanCodeing(rootPnode,N,rootHuffmanTree);
 	for(i=0;i<N;i++)
