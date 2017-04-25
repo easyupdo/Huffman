@@ -1,8 +1,18 @@
+/*
+流编码格式:[huffman编码][结束符]
+例如: 字符:Z  编码110@      //@是结束符
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-//#define DEBUG
+//#define huffmanCodeing_Debug //由树生成编码调试
+//#define buildTree_Debug      //构建huffman树调试
+//#define node_Debug           //节点信息调试
+//#define readConfig_Debug     //读取配置文件调试
+//#define dataFlowCoding_Debug //用户输入的字符串生成数据流编码调试
+#define dataFlowDecoding_Debug
 // 1.
 /*
 typedef struct huffManTree
@@ -55,21 +65,42 @@ int charStringTransformToInt(char ch[])//
 	{
 		p-=1;
 		nsum = nsum*10;
-		weight = weight + ((*p) - 48)*nsum;
-		
+		weight = weight + ((*p) - 48)*nsum;		
 	}
 	return weight;
 }
+
+/*
+功能：搜索编码对应的字符
+参数:根节点
+返回值：无
+*/
+void quickSerachCharHuffmanCode(node *pnode)
+{
+	char userchar;
+	printf("Please input you want search char!");
+	scanf("%c",&userchar);
+	while(1)
+	{
+		if(userchar == pnode->info_word)
+		break;
+		pnode+=1;
+	}
+	printf("字符:%c  编码:%s\n",pnode->info_word,pnode->info_huffmanCode);
+}
+
+
+
+
 /*
 功能: 读取配置文件
 参数:
-	node*pnode:字符和权值结构数组首地址
-返回值: 无
-
+	无
+返回值: 返回根节点
 */
 
 
-void readHuffmanConfig(node*pnode)
+void  readHuffmanConfig(node*pnode)
 {
 	FILE *stream ;
 	char arr[100];
@@ -78,6 +109,7 @@ void readHuffmanConfig(node*pnode)
 	char huffmanCode[256];
 	int huffmanWeight;
 	int i = 0,k = 0;
+	
 	stream = fopen("huffman.conf","r");
 	while(!feof(stream))
 	{
@@ -100,11 +132,15 @@ void readHuffmanConfig(node*pnode)
 		i++;
 		//strcat(&ch[0][0],"\0");//从目标字符串的\0处开始链接，如果目标 字符串结尾没有\0 链接就会出错
 		huffmanWeight = charStringTransformToInt(huffmanCode);
+#ifdef readConfig_Debug
 		printf("字符:%s  权值:%d\n",ch,huffmanWeight);
+		getchar();
+#endif
 		pnode->info_weight = huffmanWeight;
 		pnode->info_word = ch[0];
 		pnode+=1;
 	}
+
 }
 
 
@@ -134,8 +170,10 @@ void sortMinToMax(node*pnode,int N)
 			pnode +=1;
 			if(parperPnode->info_weight > pnode->info_weight)
 			{
+#ifdef node_Debug
 				printf("parperPnode=%d ",parperPnode->info_weight);
 				printf("pnode=%d \n",pnode->info_weight);
+#endif	
 				tmp_weight = parperPnode->info_weight;
 				parperPnode->info_weight = pnode->info_weight;
 				pnode->info_weight = tmp_weight;
@@ -155,8 +193,9 @@ void sortMinToMax(node*pnode,int N)
 	int N                 :用户输入字符个数
 	HFTree*rootHuffmanTree:生成的huffman树根节点
 返回值:返回权值最小的叶子节点	
+********************注意:此函数会将节点信息按照从小到大的顺序排序保存到结构中********************
 */
-node * findMinNode(node * pnode ,int N,int k)
+node * findMinNode(node * pnode ,int N,int k) 
 {
 	int i;
 	sortMinToMax(pnode,N);//first step :sort
@@ -164,6 +203,7 @@ node * findMinNode(node * pnode ,int N,int k)
 	node * minNode;
 	//minNode->info_weight = pnode[k].info_weight;
 	minNode = &pnode[k];
+	
 	for(i=k;i<N;i++)
 	{
 		if(minNode->info_weight > pnode[i].info_weight)
@@ -194,6 +234,7 @@ void huffmanCodeing(node * pnode,int N,HFTree *rootHuffmanTree)
 	memset(codeR,0,sizeof(codeR));
 	for(i=N-2,k=0;i>=0;i--,k++)//
 	{
+		
 		if(rootHuffmanTree[i].rchild == -1 )
 		{
 			code = "0";//zuo L
@@ -202,10 +243,12 @@ void huffmanCodeing(node * pnode,int N,HFTree *rootHuffmanTree)
 			strcpy(codeL,codeF);//codeL = codeF  + code;
 			strcat(codeL,code);
 			strcat(codeF,codeT);//codeF = codeF + codeT;	
-#ifdef DEBUG
+#ifdef huffmanCodeing_Debug
 			printf("LLLL%s\n",codeL);
+			getchar();
 #endif	
 			strcpy(pnode[i+1].info_huffmanCode,codeL);//根据huffman树生成编码保存到节点结构的info_huffmancode字段中
+			strcat(pnode[i+1].info_huffmanCode,"@");
 		}else
 		if(rootHuffmanTree[i].lchild == -1)
 		{
@@ -216,10 +259,12 @@ void huffmanCodeing(node * pnode,int N,HFTree *rootHuffmanTree)
 			strcpy(codeR,codeF);//codeR = codeF  + code;
 			strcat(codeR,code);
 			strcat(codeF,codeT);//codeF = codeF + codeT;	
-#ifdef DEBUG	
+#ifdef huffmanCodeing_Debug	
 			printf("RRR%s\n",codeR);
+			getchar();
 #endif	
 			strcpy(pnode[i+1].info_huffmanCode,codeR);//根据huffman树生成编码保存到节点结构的info_huffmancode字段中
+			strcat(pnode[i+1].info_huffmanCode,"@");
 		}else
 		{
 			code = "1";//you R
@@ -230,11 +275,17 @@ void huffmanCodeing(node * pnode,int N,HFTree *rootHuffmanTree)
 			
 			strcpy(codeR,codeF);//codeL = codeF + 0;
 			strcat(codeR,code);//codeR = codeF + 1;
+			
 			strcpy(pnode[i].info_huffmanCode,codeL);
+			strcat(pnode[i].info_huffmanCode,"@");
+			
 			strcpy(pnode[i+1].info_huffmanCode,codeR);//根据huffman树生成编码保存到节点结构的info_huffmancode字段中
-#ifdef DEBUG
+			strcat(pnode[i+1].info_huffmanCode,"@");
+
+#ifdef huffmanCodeing_Debug
 			printf("LLLL%s\n",codeL);
 			printf("RRRR%s\n",codeR);
+			getchar();
 #endif
 		}
 	}
@@ -271,8 +322,8 @@ HFTree * createHuffmanTree(node * pnode,int N)
 		
 
 		secondPnode = findMinNode(pnode,N,i);//second step:find min node
-		tmpLinkTree = rootHuffmanTree;
-		
+		tmpLinkTree = rootHuffmanTree;		
+/*BUG 1*/		
 		rootHuffmanTree->weight = firstPnode->info_weight + secondPnode->info_weight;
 		//memset(rootHuffmanTree->huffmanCode,0,sizeof(rootHuffmanTree->huffmanCode);//
 		//生成huffman树
@@ -284,25 +335,32 @@ HFTree * createHuffmanTree(node * pnode,int N)
 		else if(firstPnode->info_weight < secondPnode->info_weight)//firstPnode两个权值最小的叶子生成的和节点  secondPnode是剩下叶子中 权值最小的
 		{
 			//rootHuffmanTree
-			//printf("走右子树\n");
+#ifdef buildTree_Debug
+			printf("走右子树\n");
+			getchar();
+#endif
 			rootHuffmanTree[i-1].rchild = (secondPnode-pnode);
 			rootHuffmanTree[i-1].lchild = -1;
 		}else
 		{
-			//printf(" 走左子树\n");
+#ifdef buildTree_Debug
+			printf(" 走左子树\n");
+			getchar();
+#endif
 			rootHuffmanTree[i-1].lchild = (secondPnode - pnode);
 			rootHuffmanTree[i-1].rchild = -1;
 		}	
+		
 	}
 	return rootHuffmanTree;
 }
 /*
-功能:解码
+功能:单个字符解码
 参数:
 	pnode * pnode:保存权值和字符的结构地址
 	int N        :用户输入字符个数
 */
-void huffmanDecoding(node*rootPnode,int N)
+void huffmanSingleCharacterDecoding(node*rootPnode,int N)
 {
 	int i = 0;
 	char userDecoding[20];
@@ -310,12 +368,16 @@ void huffmanDecoding(node*rootPnode,int N)
 	int num;
 	int x;
 	printf("Please input huffmanCode for decoding\n");
+#ifdef HOME_MACHINE
+	getchar();
+#endif	
 	getchar();
 	while((ch = getchar()) != '\n')
 	{
 		userDecoding[i++] =ch; 
 	}
 	userDecoding[i] = '\0';
+	printf("userDecoding=%s\n",userDecoding);
 	num = strlen(userDecoding);
 	
 	if(N-num > 1)
@@ -333,6 +395,97 @@ void huffmanDecoding(node*rootPnode,int N)
 		}
 	}
 }
+/*
+功能:流解码
+参数:
+	pnode * pnode:保存权值和字符的结构地址
+	int N        :用户输入字符个数
+*/
+
+void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
+{
+	
+	char * user = userStringHuffmanCodeDecoding;
+	int i = 0;
+	int k = 0;
+	int len;
+	int N;
+	char ch;
+	char oneStringHuffmanCode[256];
+	
+	//memset(userStringHuffmanCodeDecoding,0,sizeof(userStringHuffmanCodeDecoding));
+
+	printf("输入数据流用于解码\n");
+	N = strlen(pnode->info_huffmanCode) + 1;
+	while((ch = getchar())!='\n')//A:65 a:97 z:122
+	{
+		//if(ch == '\0')
+		//strcat(user,'\0')
+		if(ch != '@')
+		{
+			oneStringHuffmanCode[k] = ch;
+			k+=1;		
+		}else
+		{
+			oneStringHuffmanCode[k] = '@';
+			oneStringHuffmanCode[k+1] = '\0';
+			while(1)
+			{
+				if(!strcmp(oneStringHuffmanCode,pnode->info_huffmanCode))//if oneStringHuffmanCode == pnode->info_huffmanCode
+				{
+					strcat(user,pnode->info_huffmanCode);
+					break;
+				}	
+
+				pnode+=1;
+			}	
+			k = 0;
+			memset(oneStringHuffmanCode,0,sizeof(oneStringHuffmanCode));
+		}
+		//user+=1;
+#ifdef dataFlowDecoding_Debug
+		printf(">>>>>>>>%s\n",user);		
+#endif
+	}
+}
+
+/*
+功能:生成编码流
+参数:
+	pnode * pnode:保存权值和字符的结构地址
+	int userStringHuffmanCodeing[]        :保存的编码
+*/
+void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
+{
+	////由于节点是按照权值大小排序保存的 不能按照字符的ascii码大小来查找字符所在的数组的位置,因为不能确定字符在数组中的位置 所以只能搜遍整个数组查找此字符
+	char ch;
+	char *user =userStringHuffmanCodeing;
+	memset(userStringHuffmanCodeing,0,sizeof(userStringHuffmanCodeing));
+	getchar();
+	while((ch = getchar())!='\n')//A:65 a:97 z:122
+	{
+		//if(ch == '\0')
+		//strcat(user,'\0')
+		while(1)//The char location on the node structs
+		{
+			if(ch == pnode->info_word)
+			{
+				strcat(user,pnode->info_huffmanCode);
+				break;
+			}
+			else
+			pnode+=1;	
+		}
+		//user+=1;
+#ifdef dataFlowCoding_Debug
+		printf("=====%s\n",user);
+#endif
+	}
+	
+}
+
+
+
 
 int main(int argc,char *argv[])
 {
@@ -340,11 +493,17 @@ int main(int argc,char *argv[])
 	int i,j;
 	int weight;
 	char word;
+	int MODE;
+	char tmp[100];
+	char tmp2[100];
 	node *pnode,*rootPnode;
 	HFTree * rootHuffmanTree;
-	printf("Please input the NODE num!\n");
-	scanf("%d",&N);
-	rootPnode = pnode = (node*)malloc(N*sizeof(node));
+	printf("Please select the MODE !\n");
+	printf("1.自定义   2.根据配置文件生成\n");
+	scanf("%d",&MODE);
+	//1.********************用户输入字符和权值****************
+	//scanf("%d",&N);
+	//rootPnode = pnode = (node*)malloc(N*sizeof(node));
 	/*for(i=0;i<N;i++)
 	{
 		scanf("%d %c",&pnode->info_weight,&pnode->info_word);
@@ -352,14 +511,46 @@ int main(int argc,char *argv[])
 		pnode++;
 		
 	}*/
-	readHuffmanConfig(rootPnode);
+	//*****************************************************
+	//2.*******************从配置文件读取字符和权值************
+	switch(MODE)
+	{
+		case 1:
+		{
+			printf("Please input the NODE number!\n");
+			scanf("%d",&N);
+			rootPnode = pnode = (node*)malloc(N*sizeof(node));
+			for(i=0;i<N;i++)
+			{
+				scanf("%d %c",&pnode->info_weight,&pnode->info_word);
+				memset(pnode->info_huffmanCode,0,sizeof(pnode->info_huffmanCode));
+				pnode++;
+		
+			}
+			printf("*****now*****\n");
+		}break;
+		case 2:
+		{
+			rootPnode = pnode = (node*)malloc(52*sizeof(node));
+			readHuffmanConfig(rootPnode);
+			N = 52;
+		}break;
+	}
 	rootHuffmanTree = createHuffmanTree(rootPnode,N);
 	huffmanCodeing(rootPnode,N,rootHuffmanTree);
 	for(i=0;i<N;i++)
 //#ifdef DEBUG
 	printf("权值:%d  字符:%c  编码:%s\n",rootPnode[i].info_weight,rootPnode[i].info_word,rootPnode[i].info_huffmanCode);
 	//解码//输入huffman以解码
-	huffmanDecoding(rootPnode,N);
+	//huffmanSingleCharacterDecoding(rootPnode,N);
+	//quickSerachCharHuffmanCode(rootPnode);
+	//将用户输入字符串编码
+	dataFlowCoding(rootPnode,tmp);
+	printf("用户输入字符串编码:%s\n",tmp);
+	
+	dataFlowDecoding(rootPnode,tmp2);
+	printf("解码:%s\n",tmp);
+	
 //#endif
 //MYDEBUG;
 }
