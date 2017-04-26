@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define ASCII 256  //
 #define USER_ENTER_SIZE_CONTROL  1024 //1K
@@ -13,8 +14,10 @@
 //#define buildTree_Debug      //构建huffman树调试
 //#define node_Debug           //节点信息调试
 //#define readConfig_Debug     //读取配置文件调试
-#define dataFlowCoding_Debug //用户输入的字符串生成数据流编码调试
+//#define dataFlowCoding_Debug //用户输入的字符串生成数据流编码调试
 //#define dataFlowDecoding_Debug
+#define nodePrint_Debug
+
 
 
 typedef struct userEnterStringInfo
@@ -120,9 +123,14 @@ void  readHuffmanConfig(node*pnode)
 	char ch[10];
 	char huffmanCode[256];
 	int huffmanWeight;
-	int i = 0,k = 0;
+	int charAccount = 0,k = 0;
 	
 	stream = fopen("huffman.conf","r");
+	if(stream ==NULL)
+	{
+		printf("打开配置文件失败   请检查配置文件! 错误代码:%d\n",errno);//错误代码
+		exit(1);
+	}
 	while(!feof(stream))
 	{
 		memset(arr, 0, 100);
@@ -131,7 +139,7 @@ void  readHuffmanConfig(node*pnode)
 
 		if(arr[0]=='#')
 		continue;
-		post = strchr(arr,':');
+		post = strchr(arr,':');//计算行post所在地址
 		if (post == NULL)
 		{
 			continue;
@@ -141,7 +149,7 @@ void  readHuffmanConfig(node*pnode)
 		
 		strncpy(huffmanCode,post + 1,strlen(arr) - (post -arr) -2);  //4 - 1 -1
 		huffmanCode[strlen(arr) - (post -arr) -2] = '\0';
-		i++;
+		
 		//strcat(&ch[0][0],"\0");//从目标字符串的\0处开始链接，如果目标 字符串结尾没有\0 链接就会出错
 		huffmanWeight = charStringTransformToInt(huffmanCode);
 #ifdef readConfig_Debug
@@ -151,12 +159,29 @@ void  readHuffmanConfig(node*pnode)
 		pnode->info_weight = huffmanWeight;
 		pnode->info_word = ch[0];
 		pnode+=1;
+		charAccount+=1;
+		if(charAccount!=52)
+		{
+			printf("************** 错误!**************");
+			printf(" 请检查配置文件字符完整性!\n note：目前仅仅支持英文大小写 共计52个字符 \n 下个版本将支持更多 敬 请期待");
+			exit(1);
+		}
 	}
 
 }
 
 
 
+void nodeCheckPrint(node*rootPnode,int N)
+{
+	int i;
+	printf("************* nodePrint_Debug Start *************\n");
+	for(i=0;i<N;i++)
+	{
+		printf("nodePrint_Debug--权值:%d  字符:%c \n",rootPnode[i].info_weight,rootPnode[i].info_word);
+	}
+	printf("************* nodePrint_Debug stop*************\n");
+}
 
 /*
 功能:将用户输入的信息根据权值从小到大排序
@@ -196,6 +221,8 @@ void sortMinToMax(node*pnode,int N)
 			}
 		}
 	}
+	
+	
 }
 
 /*
@@ -481,7 +508,7 @@ void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
 	char *user =userStringHuffmanCodeing;
 	memset(userStringHuffmanCodeing,0,sizeof(userStringHuffmanCodeing));
 	printf("输入要编码的字符串生成编码\n");
-	getchar();
+	//getchar();
 	while((ch = getchar())!='\n')//A:65 a:97 z:122
 	{
 		//if(ch == '\0')
@@ -489,7 +516,9 @@ void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
 		pnode = rootPnode;
 		while(1)//The char location on the node structs
 		{
+#ifdef dataFlowCoding_Debug
 			printf("now\n");
+#endif			
 			if(ch == pnode->info_word)
 			{
 				strcat(user,pnode->info_huffmanCode);
@@ -505,11 +534,27 @@ void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
 	}
 	
 }
-
-
+/*
+接受用户输入
+*/
+void acceptUserInput(userEnterStringInfo * userInfo)
+{
+	char ch;
+	int i = 0;
+	getchar();
+	while((ch = getchar()) != '\n')
+	{
+		userInfo->userEnter[i] = ch;
+		i+=1;
+	}
+	userInfo->userEnter[i] = '\0';
+	//printf(">>>>>>>>>>>>>>>>>>>>>>>>%s\n",userInfo->userEnter);
+}
 
 /*
-根据用户输入的字符串   动态计算各字符的权值
+功能:根据用户输入的字符串   动态计算各字符的权值
+参数:
+返回值:
 */
 
 void  characterFrequency(userEnterStringInfo * userInfo)
@@ -555,13 +600,13 @@ int main(int argc,char *argv[])
 	int MODE;
 	char tmp[100];
 	char tmp2[100];
-	userEnterStringInfo * userEnter,userEnterInfo = {0,{0},"How are you !"};;
+	userEnterStringInfo * userEnter,userEnterInfo = {0,{0},"How are you !"};//默认值
 	node *pnode,*rootPnode;
 	HFTree * rootHuffmanTree;
 	printf("Please select the MODE !\n");
-	printf("1.自定义   2.根据配置文件生成\n");
+	printf("1.自定义   2.根据配置文件生成   3.动态生成编码\n");
 	scanf("%d",&MODE);
-	//1.********************用户输入字符和权值****************
+	
 	//scanf("%d",&N);
 	//rootPnode = pnode = (node*)malloc(N*sizeof(node));
 	/*for(i=0;i<N;i++)
@@ -572,10 +617,10 @@ int main(int argc,char *argv[])
 		
 	}*/
 	//*****************************************************
-	//2.*******************从配置文件读取字符和权值************
+	
 	switch(MODE)
 	{
-		case 1:
+		case 1://1.********************用户输入字符和权值*********************
 		{
 			printf("Please input the NODE number!\n");
 			scanf("%d",&N);
@@ -589,27 +634,31 @@ int main(int argc,char *argv[])
 			}
 			printf("*****now*****\n");
 		}break;
-		case 2:
+		case 2://2.*******************从配置文件读取字符和权值******************
 		{
 			rootPnode = pnode = (node*)malloc(52*sizeof(node));
 			readHuffmanConfig(rootPnode);
 			N = 52;
 		}break;
-		case 3:
+		case 3://3.************根据用户输入的字符串动态生成权值和编码************
 		{
 			N = 0;
 			//userEnter = readUserString(&userEnterInfo);
+			acceptUserInput(&userEnterInfo);
 			characterFrequency(&userEnterInfo);
 			rootPnode = pnode = (node *)malloc((userEnterInfo.N)*sizeof(node));
 			//N = userEnter->N;
 			for(i=0;i<122;i++)
 			{
+				//while()
 				if(userEnterInfo.freq[i] != 0)
 				{
 					//N+=1;
 					printf("'%c':%d   ",i,userEnterInfo.freq[i]);
 					pnode->info_word = i;
+					//printf(">>>>>>>>>>>>>>>>>>>>>pnode->info_word=%c\n",pnode->info_word);
 					pnode->info_weight = userEnterInfo.freq[i];	
+					pnode+=1;
 				}
 			}
 			N = userEnterInfo.N;
@@ -617,20 +666,23 @@ int main(int argc,char *argv[])
 		}break;
 	}
 	getchar();
+#ifdef nodePrint_Debug
+	nodeCheckPrint(rootPnode,N);
+#endif
 	rootHuffmanTree = createHuffmanTree(rootPnode,N);
 	huffmanCodeing(rootPnode,N,rootHuffmanTree);
 	for(i=0;i<N;i++)
 //#ifdef DEBUG
 	printf("权值:%d  字符:%c  编码:%s\n",rootPnode[i].info_weight,rootPnode[i].info_word,rootPnode[i].info_huffmanCode);
-	//解码//输入huffman以解码
-	//huffmanSingleCharacterDecoding(rootPnode,N);
-	//quickSerachCharHuffmanCode(rootPnode);
+//解码//输入huffman以解码
+	//huffmanSingleCharacterDecoding(rootPnode,N);//单个字符解码  不需要@结束确认位置码(流解码的时候需要)
+	//quickSerachCharHuffmanCode(rootPnode);//搜索字符的huffman编码    备用接口   不需要@结束确认位置码
 	//将用户输入字符串编码
 //编码
-	dataFlowCoding(rootPnode,tmp);
+	dataFlowCoding(rootPnode,tmp);//流编码
 	printf("用户输入字符串编码:%s\n",tmp);
 //解码
-	dataFlowDecoding(rootPnode,tmp2);
+	dataFlowDecoding(rootPnode,tmp2);//流解码
 	printf("解码:%s\n",tmp2);
 	
 	//readUserString();	
