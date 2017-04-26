@@ -7,12 +7,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ASCII 256  //
+#define USER_ENTER_SIZE_CONTROL  1024 //1K
 //#define huffmanCodeing_Debug //由树生成编码调试
 //#define buildTree_Debug      //构建huffman树调试
 //#define node_Debug           //节点信息调试
 //#define readConfig_Debug     //读取配置文件调试
 #define dataFlowCoding_Debug //用户输入的字符串生成数据流编码调试
 //#define dataFlowDecoding_Debug
+
+
+typedef struct userEnterStringInfo
+{
+	int N;
+	int freq[ASCII];
+	char userEnter[USER_ENTER_SIZE_CONTROL];
+}userEnterStringInfo;
+
+
 // 1.
 /*
 typedef struct huffManTree
@@ -398,13 +410,8 @@ void huffmanSingleCharacterDecoding(node*rootPnode,int N)
 /*
 功能:流解码
 参数:
-<<<<<<< HEAD
-	pnode * pnode                         :保存权值和字符的结构地址
-	int userStringHuffmanCodeDecoding     :保存解码后的字符串
-=======
 	pnode * pnode:保存权值和字符的结构地址
 	int N        :用户输入字符个数
->>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
 */
 
 void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
@@ -426,15 +433,9 @@ void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
 	fflush(stdin);
 	while((ch = getchar())!='\n')//A:65 a:97 z:122
 	{
-<<<<<<< HEAD
-=======
 		//if(ch == '\0')
 		//strcat(user,'\0')
-<<<<<<< HEAD
 		pnode = rootPnode;
-=======
->>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
->>>>>>> ed371b8105422500086dd70a5a2d19c1a6a19235
 		if(ch != '@')
 		{
 			oneStringHuffmanCode[k] = ch;
@@ -467,11 +468,7 @@ void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
 }
 
 /*
-<<<<<<< HEAD
-功能:生成流编码
-=======
 功能:生成编码流
->>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
 参数:
 	pnode * pnode:保存权值和字符的结构地址
 	int userStringHuffmanCodeing[]        :保存的编码
@@ -487,15 +484,9 @@ void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
 	getchar();
 	while((ch = getchar())!='\n')//A:65 a:97 z:122
 	{
-<<<<<<< HEAD
-=======
 		//if(ch == '\0')
 		//strcat(user,'\0')
-<<<<<<< HEAD
 		pnode = rootPnode;
-=======
->>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
->>>>>>> ed371b8105422500086dd70a5a2d19c1a6a19235
 		while(1)//The char location on the node structs
 		{
 			printf("now\n");
@@ -517,6 +508,43 @@ void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
 
 
 
+/*
+根据用户输入的字符串   动态计算各字符的权值
+*/
+
+void  characterFrequency(userEnterStringInfo * userInfo)
+{
+	//aaAvsdwfg
+	int i;
+	//统计字符个数,为开辟空间做准备
+	//A:65 -- z:122
+	char *user = userInfo->userEnter;
+	while(*user!='\0')
+		userInfo->freq[*user++]++;		
+	for(i=0;i<122;i++)
+	{
+		if(userInfo->freq[i] != 0)
+		{
+			(userInfo->N)+=1;
+			printf("'%c':%d   ",i,userInfo->freq[i]);	
+		}
+	}	
+	
+}
+
+/*userEnterStringInfo * readUserString( userEnterStringInfo * userEnterInfo)*/
+/*{*/
+	//node* rootPnode;
+/*test*/	
+	//userEnterInfo.userEnter;
+	//characterFrequency(userEnterInfo);
+	//printf("=============%d\n",userEnterInfo.N);
+/*	*/
+/*return &userEnterInfo;*/
+/*}*/
+
+
+
 
 int main(int argc,char *argv[])
 {
@@ -527,6 +555,7 @@ int main(int argc,char *argv[])
 	int MODE;
 	char tmp[100];
 	char tmp2[100];
+	userEnterStringInfo * userEnter,userEnterInfo = {0,{0},"How are you !"};;
 	node *pnode,*rootPnode;
 	HFTree * rootHuffmanTree;
 	printf("Please select the MODE !\n");
@@ -566,7 +595,28 @@ int main(int argc,char *argv[])
 			readHuffmanConfig(rootPnode);
 			N = 52;
 		}break;
+		case 3:
+		{
+			N = 0;
+			//userEnter = readUserString(&userEnterInfo);
+			characterFrequency(&userEnterInfo);
+			rootPnode = pnode = (node *)malloc((userEnterInfo.N)*sizeof(node));
+			//N = userEnter->N;
+			for(i=0;i<122;i++)
+			{
+				if(userEnterInfo.freq[i] != 0)
+				{
+					//N+=1;
+					printf("'%c':%d   ",i,userEnterInfo.freq[i]);
+					pnode->info_word = i;
+					pnode->info_weight = userEnterInfo.freq[i];	
+				}
+			}
+			N = userEnterInfo.N;
+			
+		}break;
 	}
+	getchar();
 	rootHuffmanTree = createHuffmanTree(rootPnode,N);
 	huffmanCodeing(rootPnode,N,rootHuffmanTree);
 	for(i=0;i<N;i++)
@@ -583,6 +633,7 @@ int main(int argc,char *argv[])
 	dataFlowDecoding(rootPnode,tmp2);
 	printf("解码:%s\n",tmp2);
 	
+	//readUserString();	
 //#endif
 //MYDEBUG;
 }
