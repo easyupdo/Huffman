@@ -398,8 +398,13 @@ void huffmanSingleCharacterDecoding(node*rootPnode,int N)
 /*
 功能:流解码
 参数:
+<<<<<<< HEAD
+	pnode * pnode                         :保存权值和字符的结构地址
+	int userStringHuffmanCodeDecoding     :保存解码后的字符串
+=======
 	pnode * pnode:保存权值和字符的结构地址
 	int N        :用户输入字符个数
+>>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
 */
 
 void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
@@ -421,9 +426,15 @@ void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
 	fflush(stdin);
 	while((ch = getchar())!='\n')//A:65 a:97 z:122
 	{
+<<<<<<< HEAD
+=======
 		//if(ch == '\0')
 		//strcat(user,'\0')
+<<<<<<< HEAD
 		pnode = rootPnode;
+=======
+>>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
+>>>>>>> ed371b8105422500086dd70a5a2d19c1a6a19235
 		if(ch != '@')
 		{
 			oneStringHuffmanCode[k] = ch;
@@ -456,7 +467,11 @@ void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
 }
 
 /*
+<<<<<<< HEAD
+功能:生成流编码
+=======
 功能:生成编码流
+>>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
 参数:
 	pnode * pnode:保存权值和字符的结构地址
 	int userStringHuffmanCodeing[]        :保存的编码
@@ -472,9 +487,15 @@ void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
 	getchar();
 	while((ch = getchar())!='\n')//A:65 a:97 z:122
 	{
+<<<<<<< HEAD
+=======
 		//if(ch == '\0')
 		//strcat(user,'\0')
+<<<<<<< HEAD
 		pnode = rootPnode;
+=======
+>>>>>>> 69a9d89dafca17149b48ee1e7c2a91e80715c749
+>>>>>>> ed371b8105422500086dd70a5a2d19c1a6a19235
 		while(1)//The char location on the node structs
 		{
 			printf("now\n");
