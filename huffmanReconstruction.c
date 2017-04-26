@@ -11,8 +11,8 @@
 //#define buildTree_Debug      //构建huffman树调试
 //#define node_Debug           //节点信息调试
 //#define readConfig_Debug     //读取配置文件调试
-//#define dataFlowCoding_Debug //用户输入的字符串生成数据流编码调试
-#define dataFlowDecoding_Debug
+#define dataFlowCoding_Debug //用户输入的字符串生成数据流编码调试
+//#define dataFlowDecoding_Debug
 // 1.
 /*
 typedef struct huffManTree
@@ -411,20 +411,24 @@ void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
 	int len;
 	int N;
 	char ch;
+	node * rootPnode;
 	char oneStringHuffmanCode[256];
-	
-	//memset(userStringHuffmanCodeDecoding,0,sizeof(userStringHuffmanCodeDecoding));
+	rootPnode = pnode;
+	memset(user,0,sizeof(user));
 
 	printf("输入数据流用于解码\n");
 	N = strlen(pnode->info_huffmanCode) + 1;
+	fflush(stdin);
 	while((ch = getchar())!='\n')//A:65 a:97 z:122
 	{
 		//if(ch == '\0')
 		//strcat(user,'\0')
+		pnode = rootPnode;
 		if(ch != '@')
 		{
 			oneStringHuffmanCode[k] = ch;
 			k+=1;		
+			
 		}else
 		{
 			oneStringHuffmanCode[k] = '@';
@@ -433,18 +437,20 @@ void dataFlowDecoding(node *pnode,char userStringHuffmanCodeDecoding[])
 			{
 				if(!strcmp(oneStringHuffmanCode,pnode->info_huffmanCode))//if oneStringHuffmanCode == pnode->info_huffmanCode
 				{
-					strcat(user,pnode->info_huffmanCode);
+/*BUG2 在使用strcat链接字符串的时候出现问题*/
+					//strcat(user,&(pnode->info_word));
+					*user = pnode->info_word;
+					user+=1;
 					break;
 				}	
-
 				pnode+=1;
+				//printf("++++++++++++++++++++++++++++%s\n",user);
 			}	
 			k = 0;
 			memset(oneStringHuffmanCode,0,sizeof(oneStringHuffmanCode));
 		}
-		//user+=1;
 #ifdef dataFlowDecoding_Debug
-		printf(">>>>>>>>%s\n",user);		
+		printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>%s\n",user);		
 #endif
 	}
 }
@@ -459,15 +465,19 @@ void dataFlowCoding(node*pnode,char userStringHuffmanCodeing[])
 {
 	////由于节点是按照权值大小排序保存的 不能按照字符的ascii码大小来查找字符所在的数组的位置,因为不能确定字符在数组中的位置 所以只能搜遍整个数组查找此字符
 	char ch;
+	node * rootPnode = pnode;
 	char *user =userStringHuffmanCodeing;
 	memset(userStringHuffmanCodeing,0,sizeof(userStringHuffmanCodeing));
+	printf("输入要编码的字符串生成编码\n");
 	getchar();
 	while((ch = getchar())!='\n')//A:65 a:97 z:122
 	{
 		//if(ch == '\0')
 		//strcat(user,'\0')
+		pnode = rootPnode;
 		while(1)//The char location on the node structs
 		{
+			printf("now\n");
 			if(ch == pnode->info_word)
 			{
 				strcat(user,pnode->info_huffmanCode);
@@ -545,11 +555,12 @@ int main(int argc,char *argv[])
 	//huffmanSingleCharacterDecoding(rootPnode,N);
 	//quickSerachCharHuffmanCode(rootPnode);
 	//将用户输入字符串编码
+//编码
 	dataFlowCoding(rootPnode,tmp);
 	printf("用户输入字符串编码:%s\n",tmp);
-	
+//解码
 	dataFlowDecoding(rootPnode,tmp2);
-	printf("解码:%s\n",tmp);
+	printf("解码:%s\n",tmp2);
 	
 //#endif
 //MYDEBUG;
