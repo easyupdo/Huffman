@@ -160,12 +160,13 @@ void  readHuffmanConfig(node*pnode)
 		pnode->info_word = ch[0];
 		pnode+=1;
 		charAccount+=1;
-		if(charAccount!=52)
-		{
-			printf("************** 错误!**************");
-			printf(" 请检查配置文件字符完整性!\n note：目前仅仅支持英文大小写 共计52个字符 \n 下个版本将支持更多 敬 请期待");
-			exit(1);
-		}
+		printf(">>>>>>>>>>>>>>>>>>>>>>>>>>%d\n",charAccount);
+	}
+	if(charAccount!=52)
+	{
+		printf("************** 错误!**************");
+		printf(" 请检查配置文件字符完整性!\n note：目前仅仅支持英文大小写 共计52个字符 \n 下个版本将支持更多 敬 请期待");
+		exit(1);
 	}
 
 }
